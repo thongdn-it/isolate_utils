@@ -1,7 +1,7 @@
 import 'dart:async';
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+
 import 'package:isolate_utils/isolate_utils.dart';
 
 void main() {
@@ -24,14 +24,14 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+  MyHomePage({Key? key, required this.title}) : super(key: key);
   final String title;
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  IsolateUtils _isolateUtils;
+  IsolateUtils? _isolateUtils;
 
   @override
   Widget build(BuildContext context) {
@@ -43,33 +43,33 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            FlatButton.icon(
+            TextButton.icon(
               label: Text('Create'),
               icon: Icon(Icons.create),
               onPressed: _onCreate,
             ),
-            FlatButton.icon(
+            TextButton.icon(
               label: Text('Start'),
               icon: Icon(Icons.play_arrow),
               onPressed: _onStart,
             ),
-            FlatButton.icon(
+            TextButton.icon(
               label: Text('Pause'),
               icon: Icon(Icons.pause),
               onPressed: _onPause,
             ),
-            FlatButton.icon(
+            TextButton.icon(
               label: Text('Resume'),
               icon: Icon(Icons.play_arrow),
               onPressed: _onResume,
             ),
-            FlatButton.icon(
+            TextButton.icon(
               label: Text('Stop'),
               icon: Icon(Icons.stop),
               onPressed: _onStop,
             ),
             Text('--- OR ---'),
-            FlatButton.icon(
+            TextButton.icon(
               label: Text('Create and start'),
               icon: Icon(Icons.playlist_play),
               onPressed: _onCreateAndStart,
@@ -87,23 +87,23 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _onStart() async {
     print('Start Isolate');
-    final _value = await _isolateUtils.start();
+    final _value = await _isolateUtils?.start();
     print(_value);
   }
 
   void _onPause() {
     print('Pause Isolate');
-    _isolateUtils.pause();
+    _isolateUtils?.pause();
   }
 
   void _onResume() {
     print('Resume Isolate');
-    _isolateUtils.resume();
+    _isolateUtils?.resume();
   }
 
   void _onStop() {
     print('Stop Isolate');
-    _isolateUtils.stop();
+    _isolateUtils?.stop();
   }
 
   void _onCreateAndStart() async {

@@ -23,7 +23,8 @@ class _IsolateUtilsConfiguration<Q, R> {
 
 Future<void> _spawn<Q, R>(
     _IsolateUtilsConfiguration<Q, FutureOr<R>> configuration) async {
-  final FutureOr<R> applicationResult = await configuration.apply();
+  final FutureOr<R> applicationResult =
+      await (configuration.apply() as FutureOr<R>);
   final result = await applicationResult;
   configuration.resultPort.send(result);
 }
@@ -35,13 +36,13 @@ enum IsolateUtilsStatus { Running, Stopped }
 ///
 /// You can create multiple isolate and manager it like start, pause, resume, stop.
 class IsolateUtils {
-  IsolateUtilsStatus _status;
+  IsolateUtilsStatus? _status;
 
-  Isolate _isolate;
+  Isolate? _isolate;
 
-  ReceivePort _resultPort, _exitPort, _errorPort;
+  ReceivePort? _resultPort, _exitPort, _errorPort;
 
-  Completer _completer;
+  late Completer _completer;
 
   /// Create an isolate. The isolate will start up in a paused state. To start and get the return value, call `isolateUtils.start()`.
   ///
@@ -57,9 +58,9 @@ class IsolateUtils {
   ///
   /// The `debugLabel` argument can be specified to provide a name to add to the [Timeline].
   /// This is useful when in debuggers and logging.
-  static Future<IsolateUtils> create<Q, R>(
+  static Future<IsolateUtils?> create<Q, R>(
       ComputeCallback<Q, R> callback, Q message,
-      {String debugLabel}) async {
+      {String? debugLabel}) async {
     final _isolateUtils = IsolateUtils();
 
     if (_isolateUtils._status != null) {
@@ -83,24 +84,24 @@ class IsolateUtils {
       _IsolateUtilsConfiguration<Q, FutureOr<R>>(
         callback,
         message,
-        _isolateUtils._resultPort.sendPort,
+        _isolateUtils._resultPort!.sendPort,
         _debugLabel,
       ),
-      onError: _isolateUtils._errorPort.sendPort,
-      onExit: _isolateUtils._exitPort.sendPort,
+      onError: _isolateUtils._errorPort!.sendPort,
+      onExit: _isolateUtils._exitPort!.sendPort,
       debugName: _debugLabel,
       paused: true,
     );
 
     // create listen
-    _isolateUtils._errorPort.listen((dynamic errorData) {
+    _isolateUtils._errorPort!.listen((dynamic errorData) {
       if (!_isolateUtils._completer.isCompleted) {
         _isolateUtils._completer.completeError(errorData);
         _isolateUtils.stop();
       }
     });
 
-    _isolateUtils._exitPort.listen((dynamic exitData) {
+    _isolateUtils._exitPort!.listen((dynamic exitData) {
       if (!_isolateUtils._completer.isCompleted) {
         _isolateUtils._completer.completeError(Exception(
             'IsolateUtils -> Isolate exited without result or error.'));
@@ -108,10 +109,10 @@ class IsolateUtils {
       }
     });
 
-    _isolateUtils._resultPort.listen((dynamic resultData) {
+    _isolateUtils._resultPort!.listen((dynamic resultData) {
       assert(resultData == null || resultData is R);
       if (!_isolateUtils._completer.isCompleted) {
-        _isolateUtils._completer.complete(resultData as R);
+        _isolateUtils._completer.complete(resultData as R?);
         _isolateUtils.stop();
       }
     });
@@ -135,16 +136,20 @@ class IsolateUtils {
   ///
   /// The `debugLabel` argument can be specified to provide a name to add to the [Timeline].
   /// This is useful when in debuggers and logging.
-  static Future<R> createAndStart<Q, R>(
+  static Future<R?> createAndStart<Q, R>(
       ComputeCallback<Q, R> callback, Q message,
-      {String debugLabel}) async {
+      {String? debugLabel}) async {
     final _isolateUtils =
         await IsolateUtils.create(callback, message, debugLabel: debugLabel);
-    return _isolateUtils.start();
+    if (_isolateUtils != null) {
+      return _isolateUtils.start();
+    } else {
+      return null;
+    }
   }
 
   /// Start the isolate and return the value returned by `callback`.
-  Future<R> start<R>() async {
+  Future<R?> start<R>() async {
     // Run and get result
     resume();
     final _result = await _completer.future;
@@ -160,9 +165,9 @@ class IsolateUtils {
 
   /// Resume the current isolate
   void resume() {
-    if (_isolate.pauseCapability != null) {
+    if (_isolate?.pauseCapability != null) {
       _status = IsolateUtilsStatus.Running;
-      _isolate?.resume(_isolate?.pauseCapability);
+      _isolate?.resume(_isolate!.pauseCapability!);
     }
   }
 

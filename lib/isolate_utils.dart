@@ -5,6 +5,7 @@ import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
 
+/// _IsolateUtilsConfiguration
 class _IsolateUtilsConfiguration<Q, R> {
   final ComputeCallback<Q, R> callback;
   final Q message;
@@ -29,8 +30,10 @@ Future<void> _spawn<Q, R>(
   configuration.resultPort.send(result);
 }
 
-/// define status for isolate
-enum IsolateUtilsStatus { Running, Stopped }
+/// IsolateUtilsStatus
+///
+/// define status for isolate: [Running], [Stopped]
+enum IsolateUtilsStatus { Running, Paused, Stopped }
 
 /// An Isolate Utils.
 ///
@@ -43,6 +46,8 @@ class IsolateUtils {
   ReceivePort? _resultPort, _exitPort, _errorPort;
 
   late Completer _completer;
+
+  IsolateUtils._();
 
   /// Create an isolate. The isolate will start up in a paused state. To start and get the return value, call `isolateUtils.start()`.
   ///
@@ -61,10 +66,10 @@ class IsolateUtils {
   static Future<IsolateUtils?> create<Q, R>(
       ComputeCallback<Q, R> callback, Q message,
       {String? debugLabel}) async {
-    final _isolateUtils = IsolateUtils();
+    final _isolateUtils = IsolateUtils._();
 
     if (_isolateUtils._status != null) {
-      print('IsolateUtils_${_isolateUtils.hashCode} has been created');
+      // _isolateUtils has been created
       return null;
     }
 
@@ -117,7 +122,7 @@ class IsolateUtils {
       }
     });
 
-    _isolateUtils._status = IsolateUtilsStatus.Stopped;
+    _isolateUtils._status = IsolateUtilsStatus.Paused;
 
     return _isolateUtils;
   }
@@ -159,7 +164,7 @@ class IsolateUtils {
 
   /// Pause the current isolate
   void pause() {
-    _status = IsolateUtilsStatus.Stopped;
+    _status = IsolateUtilsStatus.Paused;
     _isolate?.pause(_isolate?.pauseCapability);
   }
 
@@ -183,10 +188,11 @@ class IsolateUtils {
     _errorPort = null;
     _exitPort = null;
     _isolate = null;
-    _status = null;
+    _status = IsolateUtilsStatus.Stopped;
   }
 
   bool get isRunning => _status == IsolateUtilsStatus.Running;
-  bool get isPaused => _status == IsolateUtilsStatus.Stopped;
-  bool get isStopped => _status == null;
+  bool get isPaused => _status == IsolateUtilsStatus.Paused;
+  bool get isStopped =>
+      _status == null || _status == IsolateUtilsStatus.Stopped;
 }
